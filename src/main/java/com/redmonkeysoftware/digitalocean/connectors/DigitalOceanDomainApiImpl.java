@@ -4,15 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redmonkeysoftware.digitalocean.exceptions.DigitalOceanException;
 import com.redmonkeysoftware.digitalocean.logic.Domain;
 import com.redmonkeysoftware.digitalocean.logic.Domains;
-import com.redmonkeysoftware.digitalocean.logic.wrappers.DomainWrapper;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-import org.apache.http.Consts;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
@@ -76,25 +70,6 @@ public class DigitalOceanDomainApiImpl extends BaseAbstractDigitalOceanApi imple
             client.execute(request, new EmptyResponseHandler());
         } catch (Exception e) {
             throw new DigitalOceanException(e);
-        }
-    }
-
-    protected class DomainsResponseHandler implements ResponseHandler<Domains> {
-
-        @Override
-        public Domains handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Domains.class);
-        }
-    }
-
-    protected class DomainResponseHandler implements ResponseHandler<Domain> {
-
-        @Override
-        public Domain handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            DomainWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), DomainWrapper.class);
-            return wrapper != null ? wrapper.getDomain() : null;
         }
     }
 }

@@ -6,14 +6,8 @@ import com.redmonkeysoftware.digitalocean.logic.Action;
 import com.redmonkeysoftware.digitalocean.logic.Actions;
 import com.redmonkeysoftware.digitalocean.logic.Image;
 import com.redmonkeysoftware.digitalocean.logic.Images;
-import com.redmonkeysoftware.digitalocean.logic.wrappers.ActionWrapper;
-import com.redmonkeysoftware.digitalocean.logic.wrappers.ImageWrapper;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
@@ -172,44 +166,6 @@ public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implem
             return result;
         } catch (Exception e) {
             throw new DigitalOceanException(e);
-        }
-    }
-
-    protected class ImagesResponseHandler implements ResponseHandler<Images> {
-
-        @Override
-        public Images handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Images.class);
-        }
-    }
-
-    protected class ImageResponseHandler implements ResponseHandler<Image> {
-
-        @Override
-        public Image handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            ImageWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), ImageWrapper.class);
-            return wrapper != null ? wrapper.getImage() : null;
-        }
-    }
-
-    protected class ImageActionsResponseHandler implements ResponseHandler<Actions> {
-
-        @Override
-        public Actions handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Actions.class);
-        }
-    }
-
-    protected class ImageActionResponseHandler implements ResponseHandler<Action> {
-
-        @Override
-        public Action handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            ActionWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), ActionWrapper.class);
-            return wrapper != null ? wrapper.getAction() : null;
         }
     }
 }

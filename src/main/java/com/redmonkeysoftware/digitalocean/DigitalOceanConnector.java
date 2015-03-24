@@ -9,6 +9,8 @@ import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDomainApi;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDomainApiImpl;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDomainRecordApi;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDomainRecordApiImpl;
+import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDropletActionApi;
+import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDropletActionApiImpl;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDropletApi;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanDropletApiImpl;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanImageApi;
@@ -23,11 +25,13 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeader;
 
 public class DigitalOceanConnector implements Closeable {
 
     private final ObjectMapper objectMapper;
+    private final PoolingHttpClientConnectionManager connectionManager;
     private final CloseableHttpClient client;
     private final String baseUrl;
     private final String authToken;
@@ -36,25 +40,28 @@ public class DigitalOceanConnector implements Closeable {
     private DigitalOceanDomainApi domainApi;
     private DigitalOceanDomainRecordApi domainRecordApi;
     private DigitalOceanDropletApi dropletApi;
+    private DigitalOceanDropletActionApi dropletActionApi;
     private DigitalOceanImageApi imageApi;
     private DigitalOceanSshKeyApi sshKeyApi;
 
     public DigitalOceanConnector(final String authToken) {
         this.authToken = authToken;
-        this.client = createDefaultHttpClient();
-        this.objectMapper = createDefaultObjectMapper();
+        this.connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setDefaultMaxPerRoute(5);
+        this.client = createClient();
+        this.objectMapper = createObjectMapper();
         this.baseUrl = "https://api.digitalocean.com/v2/";
     }
 
-    private CloseableHttpClient createDefaultHttpClient() {
+    private CloseableHttpClient createClient() {
         List<Header> headers = new ArrayList<>();
         headers.add(new BasicHeader("Content-Type", "application/json"));
         headers.add(new BasicHeader("Authorization", "Bearer " + authToken));
         RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(5000).setConnectTimeout(5000).setSocketTimeout(5000).build();
-        return HttpClients.custom().setDefaultHeaders(headers).setDefaultRequestConfig(requestConfig).build();
+        return HttpClients.custom().setDefaultHeaders(headers).setDefaultRequestConfig(requestConfig).setConnectionManager(connectionManager).build();
     }
 
-    private ObjectMapper createDefaultObjectMapper() {
+    private ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -96,6 +103,13 @@ public class DigitalOceanConnector implements Closeable {
             dropletApi = new DigitalOceanDropletApiImpl(objectMapper, client, baseUrl);
         }
         return dropletApi;
+    }
+
+    public synchronized DigitalOceanDropletActionApi getDropletActionApi() {
+        if (dropletActionApi == null) {
+            dropletActionApi = new DigitalOceanDropletActionApiImpl(objectMapper, client, baseUrl);
+        }
+        return dropletActionApi;
     }
 
     public synchronized DigitalOceanImageApi getImageApi() {

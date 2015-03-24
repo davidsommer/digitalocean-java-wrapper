@@ -4,13 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redmonkeysoftware.digitalocean.exceptions.DigitalOceanException;
 import com.redmonkeysoftware.digitalocean.logic.DomainRecord;
 import com.redmonkeysoftware.digitalocean.logic.DomainRecords;
-import com.redmonkeysoftware.digitalocean.logic.wrappers.DomainRecordWrapper;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
@@ -82,25 +77,6 @@ public class DigitalOceanDomainRecordApiImpl extends BaseAbstractDigitalOceanApi
             client.execute(request, new EmptyResponseHandler());
         } catch (Exception e) {
             throw new DigitalOceanException(e);
-        }
-    }
-
-    protected class DomainRecordsResponseHandler implements ResponseHandler<DomainRecords> {
-
-        @Override
-        public DomainRecords handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), DomainRecords.class);
-        }
-    }
-
-    protected class DomainRecordResponseHandler implements ResponseHandler<DomainRecord> {
-
-        @Override
-        public DomainRecord handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            DomainRecordWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), DomainRecordWrapper.class);
-            return wrapper != null ? wrapper.getRecord() : null;
         }
     }
 }

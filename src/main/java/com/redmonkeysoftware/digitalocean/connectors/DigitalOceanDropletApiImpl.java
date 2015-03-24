@@ -2,18 +2,18 @@ package com.redmonkeysoftware.digitalocean.connectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redmonkeysoftware.digitalocean.exceptions.DigitalOceanException;
+import com.redmonkeysoftware.digitalocean.logic.Actions;
+import com.redmonkeysoftware.digitalocean.logic.Backups;
 import com.redmonkeysoftware.digitalocean.logic.Droplet;
 import com.redmonkeysoftware.digitalocean.logic.Droplets;
 import com.redmonkeysoftware.digitalocean.logic.Kernels;
-import com.redmonkeysoftware.digitalocean.logic.wrappers.DropletWrapper;
-import java.io.IOException;
+import com.redmonkeysoftware.digitalocean.logic.Neighbors;
+import com.redmonkeysoftware.digitalocean.logic.Snapshots;
+import com.redmonkeysoftware.digitalocean.logic.Upgrade;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
@@ -63,6 +63,72 @@ public class DigitalOceanDropletApiImpl extends BaseAbstractDigitalOceanApi impl
     }
 
     @Override
+    public Snapshots lookupDropletSnapshots(Long id) throws DigitalOceanException {
+        try {
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "droplets/" + id + "/snapshots").build();
+            Snapshots result = client.execute(request, new SnapshotsResponseHandler());
+            return result;
+        } catch (Exception e) {
+            throw new DigitalOceanException(e);
+        }
+    }
+
+    @Override
+    public Backups lookupDropletBackups(Long id) throws DigitalOceanException {
+        try {
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "droplets/" + id + "/backups").build();
+            Backups result = client.execute(request, new BackupsResponseHandler());
+            return result;
+        } catch (Exception e) {
+            throw new DigitalOceanException(e);
+        }
+    }
+
+    @Override
+    public Actions lookupDropletActions(Long id) throws DigitalOceanException {
+        try {
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "droplets/" + id + "/actions").build();
+            Actions result = client.execute(request, new ActionsResponseHandler());
+            return result;
+        } catch (Exception e) {
+            throw new DigitalOceanException(e);
+        }
+    }
+
+    @Override
+    public Droplets lookupDropletNeighbors(Long id) throws DigitalOceanException {
+        try {
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "droplets/" + id + "/neighbors").build();
+            Droplets result = client.execute(request, new DropletsResponseHandler());
+            return result;
+        } catch (Exception e) {
+            throw new DigitalOceanException(e);
+        }
+    }
+
+    @Override
+    public Neighbors lookupNeighbors() throws DigitalOceanException {
+        try {
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "reports/droplet_neighbors").build();
+            Neighbors result = client.execute(request, new NeighborsResponseHandler());
+            return result;
+        } catch (Exception e) {
+            throw new DigitalOceanException(e);
+        }
+    }
+
+    @Override
+    public List<Upgrade> lookupUpgrades() throws DigitalOceanException {
+        try {
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "droplet_upgrades").build();
+            List<Upgrade> results = client.execute(request, new UpgradesResponseHandler());
+            return results;
+        } catch (Exception e) {
+            throw new DigitalOceanException(e);
+        }
+    }
+
+    @Override
     public Droplet createDroplet(String name, String region, String size,
             Long imageId, List<Integer> sshKeys, Boolean backups, Boolean ipv6,
             Boolean privateNetworking, String userData) throws DigitalOceanException {
@@ -103,34 +169,6 @@ public class DigitalOceanDropletApiImpl extends BaseAbstractDigitalOceanApi impl
             client.execute(request, new EmptyResponseHandler());
         } catch (Exception e) {
             throw new DigitalOceanException(e);
-        }
-    }
-
-    protected class DropletsResponseHandler implements ResponseHandler<Droplets> {
-
-        @Override
-        public Droplets handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Droplets.class);
-        }
-    }
-
-    protected class DropletResponseHandler implements ResponseHandler<Droplet> {
-
-        @Override
-        public Droplet handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            DropletWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), DropletWrapper.class);
-            return wrapper != null ? wrapper.getDroplet() : null;
-        }
-    }
-
-    protected class KernelsResponseHandler implements ResponseHandler<Kernels> {
-
-        @Override
-        public Kernels handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Kernels.class);
         }
     }
 }

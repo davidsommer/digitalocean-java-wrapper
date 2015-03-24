@@ -4,13 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redmonkeysoftware.digitalocean.exceptions.DigitalOceanException;
 import com.redmonkeysoftware.digitalocean.logic.SshKey;
 import com.redmonkeysoftware.digitalocean.logic.SshKeys;
-import com.redmonkeysoftware.digitalocean.logic.wrappers.SshKeyWrapper;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
@@ -125,25 +120,6 @@ public class DigitalOceanSshKeyApiImpl extends BaseAbstractDigitalOceanApi imple
             client.execute(request, new EmptyResponseHandler());
         } catch (Exception e) {
             throw new DigitalOceanException(e);
-        }
-    }
-
-    protected class SshKeysResponseHandler implements ResponseHandler<SshKeys> {
-
-        @Override
-        public SshKeys handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), SshKeys.class);
-        }
-    }
-
-    protected class SshKeyResponseHandler implements ResponseHandler<SshKey> {
-
-        @Override
-        public SshKey handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-            checkResponse(response);
-            SshKeyWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), SshKeyWrapper.class);
-            return wrapper != null ? wrapper.getKey() : null;
         }
     }
 }
