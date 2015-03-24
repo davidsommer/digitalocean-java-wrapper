@@ -5,6 +5,8 @@ This is a very simple Java Wrapper for the Digital Ocean API v2 found here:
 
 https://developers.digitalocean.com/documentation/v2/
 
+It does not do anything such as type checking or validation. You are expected to have knowledge of how the api works or have at least looked through the api documentation.
+
 ### Usage
 
 You can use the ``DigitalOceanConnector`` class like so:
@@ -24,6 +26,7 @@ You have access to:
  - DigitalOceanDomainApi
  - DigitalOceanDomainRecordApi
  - DigitalOceanDropletApi
+ - DigitalOceanDropletActionApi
  - DigitalOceanImageApi
  - DigitalOceanSshKeyApi
 
