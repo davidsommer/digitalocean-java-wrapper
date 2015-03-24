@@ -7,6 +7,8 @@ import com.redmonkeysoftware.digitalocean.logic.Action;
 import com.redmonkeysoftware.digitalocean.logic.Actions;
 import com.redmonkeysoftware.digitalocean.logic.Regions;
 import com.redmonkeysoftware.digitalocean.logic.Sizes;
+import com.redmonkeysoftware.digitalocean.logic.wrappers.AccountWrapper;
+import com.redmonkeysoftware.digitalocean.logic.wrappers.ActionWrapper;
 import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -25,7 +27,7 @@ public class DigitalOceanAccountApiImpl extends BaseAbstractDigitalOceanApi impl
     @Override
     public Account lookupAccount() throws DigitalOceanException {
         try {
-            HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "account").build();
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "account").build();
             Account result = client.execute(request, new AccountResponseHandler());
             return result;
         } catch (Exception e) {
@@ -36,7 +38,7 @@ public class DigitalOceanAccountApiImpl extends BaseAbstractDigitalOceanApi impl
     @Override
     public Actions lookupActions(Long page) throws DigitalOceanException {
         try {
-            RequestBuilder rb = RequestBuilder.post().setUri(baseUrl + "account/actions");
+            RequestBuilder rb = RequestBuilder.get().setUri(baseUrl + "actions");
             if (page != null) {
                 rb.addParameter("page", String.valueOf(page));
             }
@@ -50,7 +52,7 @@ public class DigitalOceanAccountApiImpl extends BaseAbstractDigitalOceanApi impl
     @Override
     public Action lookupAction(Long id) throws DigitalOceanException {
         try {
-            HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "account/actions/" + id).build();
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "actions/" + id).build();
             Action result = client.execute(request, new ActionResponseHandler());
             return result;
         } catch (Exception e) {
@@ -61,7 +63,7 @@ public class DigitalOceanAccountApiImpl extends BaseAbstractDigitalOceanApi impl
     @Override
     public Sizes lookupSizes(Long page) throws DigitalOceanException {
         try {
-            RequestBuilder rb = RequestBuilder.post().setUri(baseUrl + "sizes");
+            RequestBuilder rb = RequestBuilder.get().setUri(baseUrl + "sizes");
             if (page != null) {
                 rb.addParameter("page", String.valueOf(page));
             }
@@ -75,7 +77,7 @@ public class DigitalOceanAccountApiImpl extends BaseAbstractDigitalOceanApi impl
     @Override
     public Regions lookupRegions(Long page) throws DigitalOceanException {
         try {
-            RequestBuilder rb = RequestBuilder.post().setUri(baseUrl + "regions");
+            RequestBuilder rb = RequestBuilder.get().setUri(baseUrl + "regions");
             if (page != null) {
                 rb.addParameter("page", String.valueOf(page));
             }
@@ -91,7 +93,8 @@ public class DigitalOceanAccountApiImpl extends BaseAbstractDigitalOceanApi impl
         @Override
         public Account handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
             checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Account.class);
+            AccountWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), AccountWrapper.class);
+            return wrapper != null ? wrapper.getAccount() : null;
         }
     }
 
@@ -109,7 +112,8 @@ public class DigitalOceanAccountApiImpl extends BaseAbstractDigitalOceanApi impl
         @Override
         public Action handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
             checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Action.class);
+            ActionWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), ActionWrapper.class);
+            return wrapper != null ? wrapper.getAction() : null;
         }
     }
 

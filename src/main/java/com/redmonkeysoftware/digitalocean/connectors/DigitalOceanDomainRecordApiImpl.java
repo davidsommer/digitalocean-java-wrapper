@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redmonkeysoftware.digitalocean.exceptions.DigitalOceanException;
 import com.redmonkeysoftware.digitalocean.logic.DomainRecord;
 import com.redmonkeysoftware.digitalocean.logic.DomainRecords;
+import com.redmonkeysoftware.digitalocean.logic.wrappers.DomainRecordWrapper;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 public class DigitalOceanDomainRecordApiImpl extends BaseAbstractDigitalOceanApi implements DigitalOceanDomainRecordApi {
@@ -47,26 +51,22 @@ public class DigitalOceanDomainRecordApiImpl extends BaseAbstractDigitalOceanApi
     @Override
     public DomainRecord persistRecord(String domainName, DomainRecord record) throws DigitalOceanException {
         try {
+            Map<String, String> params = new HashMap<>();
+            params.put("type", record.getType());
+            params.put("name", record.getName());
+            params.put("data", record.getData());
+            params.put("priority", record.getPriority() != null ? String.valueOf(record.getPriority()) : null);
+            params.put("port", record.getPort() != null ? record.getPort().toString() : null);
+            params.put("weight", record.getWeight() != null ? record.getWeight().toString() : null);
+            String paramString = objectMapper.writeValueAsString(params);
             if (record.getId() == null) {
                 HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "domains/" + domainName + "/records")
-                        .addParameter("type", record.getType())
-                        .addParameter("name", record.getName())
-                        .addParameter("data", record.getData())
-                        .addParameter("priority", record.getPriority() != null ? record.getPriority().toString() : null)
-                        .addParameter("port", record.getPort() != null ? record.getPort().toString() : null)
-                        .addParameter("weight", record.getWeight() != null ? record.getWeight().toString() : null)
-                        .build();
+                        .setEntity(new StringEntity(paramString)).build();
                 DomainRecord result = client.execute(request, new DomainRecordResponseHandler());
                 return result;
             } else {
                 HttpUriRequest request = RequestBuilder.put().setUri(baseUrl + "domains/" + domainName + "/records/" + record.getId())
-                        .addParameter("type", record.getType())
-                        .addParameter("name", record.getName())
-                        .addParameter("data", record.getData())
-                        .addParameter("priority", record.getPriority() != null ? record.getPriority().toString() : null)
-                        .addParameter("port", record.getPort() != null ? record.getPort().toString() : null)
-                        .addParameter("weight", record.getWeight() != null ? record.getWeight().toString() : null)
-                        .build();
+                        .setEntity(new StringEntity(paramString)).build();
                 DomainRecord result = client.execute(request, new DomainRecordResponseHandler());
                 return result;
             }
@@ -99,7 +99,8 @@ public class DigitalOceanDomainRecordApiImpl extends BaseAbstractDigitalOceanApi
         @Override
         public DomainRecord handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
             checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), DomainRecord.class);
+            DomainRecordWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), DomainRecordWrapper.class);
+            return wrapper != null ? wrapper.getRecord() : null;
         }
     }
 }

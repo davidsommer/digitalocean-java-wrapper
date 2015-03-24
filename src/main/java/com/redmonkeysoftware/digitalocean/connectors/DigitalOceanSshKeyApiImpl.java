@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redmonkeysoftware.digitalocean.exceptions.DigitalOceanException;
 import com.redmonkeysoftware.digitalocean.logic.SshKey;
 import com.redmonkeysoftware.digitalocean.logic.SshKeys;
+import com.redmonkeysoftware.digitalocean.logic.wrappers.SshKeyWrapper;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 public class DigitalOceanSshKeyApiImpl extends BaseAbstractDigitalOceanApi implements DigitalOceanSshKeyApi {
@@ -36,9 +40,12 @@ public class DigitalOceanSshKeyApiImpl extends BaseAbstractDigitalOceanApi imple
     @Override
     public SshKey createSshKey(String name, String publicKey) throws DigitalOceanException {
         try {
+            Map<String, String> params = new HashMap<>();
+            params.put("name", name);
+            params.put("public_key", publicKey);
+            String paramString = objectMapper.writeValueAsString(params);
             HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "account/keys")
-                    .addParameter("name", name)
-                    .addParameter("public_key", publicKey)
+                    .setEntity(new StringEntity(paramString))
                     .build();
             SshKey result = client.execute(request, new SshKeyResponseHandler());
             return result;
@@ -72,8 +79,11 @@ public class DigitalOceanSshKeyApiImpl extends BaseAbstractDigitalOceanApi imple
     @Override
     public SshKey updateSshKey(Long id, String name) throws DigitalOceanException {
         try {
+            Map<String, String> params = new HashMap<>();
+            params.put("name", name);
+            String paramString = objectMapper.writeValueAsString(params);
             HttpUriRequest request = RequestBuilder.put().setUri(baseUrl + "account/keys/" + id)
-                    .addParameter("name", name)
+                    .setEntity(new StringEntity(paramString))
                     .build();
             SshKey result = client.execute(request, new SshKeyResponseHandler());
             return result;
@@ -85,8 +95,11 @@ public class DigitalOceanSshKeyApiImpl extends BaseAbstractDigitalOceanApi imple
     @Override
     public SshKey updateSshKey(String fingerprint, String name) throws DigitalOceanException {
         try {
+            Map<String, String> params = new HashMap<>();
+            params.put("name", name);
+            String paramString = objectMapper.writeValueAsString(params);
             HttpUriRequest request = RequestBuilder.put().setUri(baseUrl + "account/keys/" + fingerprint)
-                    .addParameter("name", name)
+                    .setEntity(new StringEntity(paramString))
                     .build();
             SshKey result = client.execute(request, new SshKeyResponseHandler());
             return result;
@@ -129,7 +142,8 @@ public class DigitalOceanSshKeyApiImpl extends BaseAbstractDigitalOceanApi imple
         @Override
         public SshKey handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
             checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), SshKey.class);
+            SshKeyWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), SshKeyWrapper.class);
+            return wrapper != null ? wrapper.getKey() : null;
         }
     }
 }

@@ -16,19 +16,19 @@ public class SshKeys implements Serializable {
     }
     
     public Long getCurrentPage() {
-        return links != null ? links.getCurrentPageNumber() : 1l;
+        return ((links != null)&&(links.getPages() != null)) ? links.getPages().getCurrentPageNumber() : 1l;
     }
 
     public Long getNextPage() {
-        return links != null ? links.getNextPageNumber() : 1l;
+        return ((links != null)&&(links.getPages() != null)) ? links.getPages().getNextPageNumber() : null;
     }
 
     public Long getPrevPage() {
-        return links != null ? links.getPrevPageNumber() : 1l;
+        return ((links != null)&&(links.getPages() != null)) ? links.getPages().getPrevPageNumber() : 1l;
     }
     
     public Long getTotalPages() {
-        return links != null ? links.getLastPageNumber() : 1l;
+        return ((links != null)&&(links.getPages() != null)) ? links.getPages().getLastPageNumber() : 1l;
     }
 
     public List<SshKey> getKeys() {

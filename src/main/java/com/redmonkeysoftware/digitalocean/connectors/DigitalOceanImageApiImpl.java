@@ -6,12 +6,17 @@ import com.redmonkeysoftware.digitalocean.logic.Action;
 import com.redmonkeysoftware.digitalocean.logic.Actions;
 import com.redmonkeysoftware.digitalocean.logic.Image;
 import com.redmonkeysoftware.digitalocean.logic.Images;
+import com.redmonkeysoftware.digitalocean.logic.wrappers.ActionWrapper;
+import com.redmonkeysoftware.digitalocean.logic.wrappers.ImageWrapper;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implements DigitalOceanImageApi {
@@ -83,7 +88,7 @@ public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implem
     @Override
     public Image lookupImage(Long id) throws DigitalOceanException {
         try {
-            HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "images/" + id).build();
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "images/" + id).build();
             Image result = client.execute(request, new ImageResponseHandler());
             return result;
         } catch (Exception e) {
@@ -94,7 +99,7 @@ public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implem
     @Override
     public Image lookupImage(String slug) throws DigitalOceanException {
         try {
-            HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "images/" + slug).build();
+            HttpUriRequest request = RequestBuilder.get().setUri(baseUrl + "images/" + slug).build();
             Image result = client.execute(request, new ImageResponseHandler());
             return result;
         } catch (Exception e) {
@@ -105,8 +110,11 @@ public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implem
     @Override
     public Image updateImage(Long id, String name) throws DigitalOceanException {
         try {
+            Map<String, String> params = new HashMap<>();
+            params.put("name", name);
+            String paramString = objectMapper.writeValueAsString(params);
             HttpUriRequest request = RequestBuilder.put().setUri(baseUrl + "images/" + id)
-                    .addParameter("name", name)
+                    .setEntity(new StringEntity(paramString))
                     .build();
             Image result = client.execute(request, new ImageResponseHandler());
             return result;
@@ -142,9 +150,12 @@ public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implem
     @Override
     public Action transferImage(Long imageId, String region) throws DigitalOceanException {
         try {
+            Map<String, String> params = new HashMap<>();
+            params.put("type", "transfer");
+            params.put("region", region);
+            String paramString = objectMapper.writeValueAsString(params);
             HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "images/" + imageId + "/actions")
-                    .addParameter("type", "transfer")
-                    .addParameter("region", region)
+                    .setEntity(new StringEntity(paramString))
                     .build();
             Action result = client.execute(request, new ImageActionResponseHandler());
             return result;
@@ -178,7 +189,8 @@ public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implem
         @Override
         public Image handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
             checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Image.class);
+            ImageWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), ImageWrapper.class);
+            return wrapper != null ? wrapper.getImage() : null;
         }
     }
 
@@ -196,7 +208,8 @@ public class DigitalOceanImageApiImpl extends BaseAbstractDigitalOceanApi implem
         @Override
         public Action handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
             checkResponse(response);
-            return objectMapper.readValue(response.getEntity().getContent(), Action.class);
+            ActionWrapper wrapper = objectMapper.readValue(response.getEntity().getContent(), ActionWrapper.class);
+            return wrapper != null ? wrapper.getAction() : null;
         }
     }
 }

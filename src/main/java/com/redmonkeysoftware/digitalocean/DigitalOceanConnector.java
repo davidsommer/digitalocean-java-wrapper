@@ -15,15 +15,17 @@ import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanImageApi;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanImageApiImpl;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanSshKeyApi;
 import com.redmonkeysoftware.digitalocean.connectors.DigitalOceanSshKeyApiImpl;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.Header;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 
-public class DigitalOceanConnector {
+public class DigitalOceanConnector implements Closeable {
 
     private final ObjectMapper objectMapper;
     private final CloseableHttpClient client;
@@ -61,6 +63,11 @@ public class DigitalOceanConnector {
         mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         return mapper;
+    }
+
+    @Override
+    public void close() {
+        HttpClientUtils.closeQuietly(client);
     }
 
     public synchronized DigitalOceanAccountApi getAccountApi() {
