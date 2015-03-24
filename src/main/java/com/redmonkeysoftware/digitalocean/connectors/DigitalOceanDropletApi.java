@@ -12,8 +12,8 @@ public interface DigitalOceanDropletApi {
     public Droplet lookupDroplet(Long id) throws DigitalOceanException;
 
     public Droplet createDroplet(String name, String region, String size,
-            Long imageId, List<Integer> sshKeys, boolean backups, boolean ipv6,
-            boolean privateNetworking, String userData) throws DigitalOceanException;
+            Long imageId, List<Integer> sshKeys, Boolean backups, Boolean ipv6,
+            Boolean privateNetworking, String userData) throws DigitalOceanException;
 
     public void deleteDroplet(Long id) throws DigitalOceanException;
 }

@@ -6,6 +6,7 @@ import com.redmonkeysoftware.digitalocean.logic.Droplet;
 import com.redmonkeysoftware.digitalocean.logic.Droplets;
 import java.io.IOException;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -47,21 +48,30 @@ public class DigitalOceanDropletApiImpl extends BaseAbstractDigitalOceanApi impl
 
     @Override
     public Droplet createDroplet(String name, String region, String size,
-            Long imageId, List<Integer> sshKeys, boolean backups, boolean ipv6,
-            boolean privateNetworking, String userData) throws DigitalOceanException {
+            Long imageId, List<Integer> sshKeys, Boolean backups, Boolean ipv6,
+            Boolean privateNetworking, String userData) throws DigitalOceanException {
         try {
-            HttpUriRequest request = RequestBuilder.post().setUri(baseUrl + "droplets")
+            RequestBuilder rb = RequestBuilder.post().setUri(baseUrl + "droplets")
                     .addParameter("name", name)
                     .addParameter("region", region)
                     .addParameter("size", size)
-                    .addParameter("image", imageId.toString())
-                    .addParameter("ssh_keys", "[]")
-                    .addParameter("backups", backups ? "true" : "false")
-                    .addParameter("ipv6", ipv6 ? "true" : "false")
-                    .addParameter("private_networking", privateNetworking ? "true" : "false")
-                    .addParameter("user_data", "")
-                    .build();
-            Droplet result = client.execute(request, new DropletResponseHandler());
+                    .addParameter("image", String.valueOf(imageId));
+            if ((sshKeys != null) && (!sshKeys.isEmpty())) {
+                rb.addParameter("ssh_keys", objectMapper.writeValueAsString(sshKeys));
+            }
+            if (backups != null) {
+                rb.addParameter("backups", backups.equals(Boolean.TRUE) ? "true" : "false");
+            }
+            if (ipv6 != null) {
+                rb.addParameter("ipv6", ipv6.equals(Boolean.TRUE) ? "true" : "false");
+            }
+            if (privateNetworking != null) {
+                rb.addParameter("private_networking", privateNetworking.equals(Boolean.TRUE) ? "true" : "false");
+            }
+            if (StringUtils.isNotBlank(userData)) {
+                rb.addParameter("user_data", userData);
+            }
+            Droplet result = client.execute(rb.build(), new DropletResponseHandler());
             return result;
         } catch (Exception e) {
             throw new DigitalOceanException(e);
@@ -95,5 +105,4 @@ public class DigitalOceanDropletApiImpl extends BaseAbstractDigitalOceanApi impl
             return objectMapper.readValue(response.getEntity().getContent(), Droplet.class);
         }
     }
-
 }
